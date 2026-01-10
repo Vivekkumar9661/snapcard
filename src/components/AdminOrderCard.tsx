@@ -313,7 +313,7 @@ const AdminOrderCard = ({ order }: { order: Iorder }) => {
               const newStatus = e.target.value.toLowerCase();
               if (newStatus === order.status) return;
 
-              updateStatus(order._id?.toString().slice(-6), newStatus);
+              updateStatus(order._id!.toString(), newStatus);
             }}
             className="border border-gray-300 rounded-2xl px-3 py-1 text-sm shadow-sm 
             hover:border-green-400 transition focus:ring-2 focus:ring-green-500 outline-none cursor-pointer"

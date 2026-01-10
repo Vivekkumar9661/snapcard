@@ -40,6 +40,10 @@ export async function POST(req: NextRequest) {
       email,
       password: hashed,
       role: "user",
+      location: {
+        type: "Point",
+        coordinates: [0, 0], // default location, update as needed
+      },
     });
 
     return NextResponse.json(
@@ -53,8 +57,12 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error("REGISTER ERROR:", err);
-    return NextResponse.json({ message: "Register failed" }, { status: 500 });
+    // Show actual error message for debugging (remove in production)
+    return NextResponse.json(
+      { message: err?.message || "Register failed" },
+      { status: 500 }
+    );
   }
 }

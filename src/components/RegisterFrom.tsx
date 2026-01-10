@@ -1,3 +1,4 @@
+"use client";
 import {
   ArrowLeft,
   EyeIcon,
@@ -28,11 +29,12 @@ const RegisterFrom = ({ previousStep }: propType) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    setError("");
     try {
       const result = await axios.post("/api/auth/register", {
         name,
@@ -40,15 +42,24 @@ const RegisterFrom = ({ previousStep }: propType) => {
         password,
       });
       router.push("/login");
-      setLoading(false);
     } catch (error: any) {
-      console.log(error.response?.data || error);
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Register failed. Please try again.");
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-white relative">
+      {error && (
+        <div className="mb-4 text-red-600 font-semibold bg-red-100 border border-red-300 rounded p-2 w-full max-w-sm text-center">
+          {error}
+        </div>
+      )}
       <div
         className="absolute top-6 left-6 flex items-center gap-2 text-green-700 hover:text-green-800 transition-colors cursor-pointer"
         onClick={() => previousStep(1)}

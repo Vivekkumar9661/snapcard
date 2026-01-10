@@ -17,13 +17,12 @@ import {
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
 import L, { LatLngExpression } from "leaflet";
 
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 
@@ -36,6 +35,23 @@ const MarkerIcon = new L.Icon({
 const Checkout = () => {
   const router = useRouter();
   const { userData } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+  // Sync Redux userData with session on mount
+  useEffect(() => {
+    async function syncUser() {
+      try {
+        const res = await axios.get("/api/me");
+        if (res.status === 200 && res.data) {
+          dispatch({ type: "user/setUserData", payload: res.data });
+        }
+      } catch (err) {
+        // Not logged in or error
+      }
+    }
+    if (!userData) {
+      syncUser();
+    }
+  }, [userData, dispatch]);
   const { subTotal, deliveryFee, finalTotal, cartData } = useSelector(
     (state: RootState) => state.cart
   );
@@ -134,12 +150,27 @@ const Checkout = () => {
   }, [position]);
 
   const handleCod = async () => {
-    if (!position) {
-      return null;
+    // ✅ position check
+    if (!position || position.length !== 2) {
+      alert("Location not selected");
+      return;
     }
+
+    // ✅ user check
+    if (!userData?._id) {
+      alert("Please login first");
+      return;
+    }
+
+    // ✅ cart check
+    if (!cartData || cartData.length === 0) {
+      alert("Cart is empty");
+      return;
+    }
+
     try {
-      const result = await axios.post("/api/user/order", {
-        userId: userData?._id,
+      const res = await axios.post("/api/user/order", {
+        userId: userData._id,
         item: cartData.map((item) => ({
           grocery: item._id,
           name: item.name,
@@ -159,11 +190,16 @@ const Checkout = () => {
           latitude: position[0],
           longitude: position[1],
         },
-        paymentMethod,
+        paymentMethod: "COD",
       });
-      router.push("/user/order-success");
-    } catch (error) {
-      console.log(error);
+
+      // ✅ success check
+      if (res.status === 201 || res.status === 200) {
+        router.push("/user/order-success");
+      }
+    } catch (error: any) {
+      console.log("ORDER ERROR:", error.response?.data || error.message);
+      alert("Order failed. Please try again");
     }
   };
 
@@ -447,7 +483,7 @@ const Checkout = () => {
             >
               <Truck className="text-green-700" />
               <span className="font-medium text-gray-700">
-                Case On Deleviry
+                Cash On Delivery
               </span>
             </button>
           </div>

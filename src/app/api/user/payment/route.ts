@@ -4,7 +4,17 @@ import User from "@/models/user.model";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const strip = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const NEXT_BASE_URL = process.env.NEXT_BASE_URL;
+
+if (!STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY is not defined in environment");
+}
+if (!NEXT_BASE_URL) {
+  throw new Error("NEXT_BASE_URL is not defined in environment");
+}
+
+const strip = new Stripe(STRIPE_SECRET_KEY);
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,8 +44,8 @@ export async function POST(req: NextRequest) {
     const session = await strip.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      success_url: `${process.env.NEXT_BASE_URL}/user/order-success`,
-      cancel_url: `${process.env.NEXT_BASE_URL}/user/order-cancel`,
+      success_url: `${NEXT_BASE_URL}/user/order-success`,
+      cancel_url: `${NEXT_BASE_URL}/user/order-cancel`,
       line_items: [
         {
           price_data: {
@@ -51,10 +61,13 @@ export async function POST(req: NextRequest) {
       metadata: { orderId: newOrder._id.toString() },
     });
     return NextResponse.json({ url: session.url }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      { message: `order payment error ${error}` },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    let errorMsg = "order payment error";
+    if (error instanceof Error) {
+      errorMsg += `: ${error.message}`;
+    } else {
+      errorMsg += `: ${JSON.stringify(error)}`;
+    }
+    return NextResponse.json({ message: errorMsg }, { status: 500 });
   }
 }

@@ -96,8 +96,19 @@ export async function POST(
   try {
     await connectDb();
 
-    const { orderId } = params;
+    // `params` may be a Promise in some Next.js runtimes — unwrap it defensively
+    const paramsResolved =
+      typeof (params as any)?.then === "function"
+        ? await (params as any)
+        : params;
+    const { orderId } = paramsResolved as { orderId: string };
     const { status } = await req.json();
+
+    // log incoming request for easier local debugging
+    console.log("[api:update-order-status] request ->", {
+      orderId,
+      status,
+    });
 
     /* ✅ Status validation */
     if (!status) {

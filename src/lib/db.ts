@@ -35,10 +35,6 @@ import mongoose from "mongoose";
 
 const MONGODB_URL = process.env.MONGODB_URL;
 
-if (!MONGODB_URL) {
-  throw new Error("MONGODB_URL is not defined");
-}
-
 // global cache (Next.js hot-reload safe)
 let cached = (global as any).mongoose;
 
@@ -50,6 +46,11 @@ if (!cached) {
 }
 
 const connectDb = async () => {
+  // ensure env var is available when attempting to connect
+  if (!MONGODB_URL) {
+    throw new Error("MONGODB_URL is not defined");
+  }
+
   // already connected
   if (cached.conn) {
     return cached.conn;
@@ -63,8 +64,13 @@ const connectDb = async () => {
     });
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
 };
 
 export default connectDb;

@@ -29,7 +29,6 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     image: { type: String },
 
-    // 🔥 FIXED GEO FIELD
     location: {
       type: {
         type: String,
@@ -38,10 +37,8 @@ const userSchema = new mongoose.Schema<IUser>(
       },
       coordinates: {
         type: [Number],
-        validate: {
-          validator: (v: number[]) => v.length === 2,
-          message: "Coordinates must be [longitude, latitude]",
-        },
+        required: false,
+        default: undefined,
       },
     },
 
