@@ -1,7 +1,7 @@
 "use client";
 import { Iorder } from "@/models/order.model";
 import axios from "axios";
-import { ArrowLeft, PackageSearch } from "lucide-react";
+import { ArrowLeft, PackageSearch, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
@@ -11,6 +11,7 @@ const MyOrderPage = () => {
   const router = useRouter();
   const [order, setOrder] = useState<Iorder[]>();
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const getMyOrder = async () => {
       try {

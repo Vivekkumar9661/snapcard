@@ -31,6 +31,10 @@ export interface Iorder {
   status: "pending" | "out of delivery" | "deliverd";
   createdAt?: Date;
   updateAt?: Date;
+  stripePaymentIntentId?: string;
+  stripePaymentMethod?: string;
+  stripeSessionId?: string;
+  reconciledAt?: Date;
 }
 
 const orderSchema = new mongoose.Schema<Iorder>(
@@ -88,6 +92,22 @@ const orderSchema = new mongoose.Schema<Iorder>(
       type: String,
       enum: ["pending", "out of delivery", "deliverd"],
       default: "pending",
+    },
+    stripePaymentIntentId: {
+      type: String,
+      default: null,
+    },
+    stripePaymentMethod: {
+      type: String,
+      default: null,
+    },
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+    reconciledAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

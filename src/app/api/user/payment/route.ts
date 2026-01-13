@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const session = await strip.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      success_url: `${NEXT_BASE_URL}/user/order-success`,
+      success_url: `${NEXT_BASE_URL}/user/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${NEXT_BASE_URL}/user/order-cancel`,
       line_items: [
         {
@@ -60,6 +60,12 @@ export async function POST(req: NextRequest) {
       ],
       metadata: { orderId: newOrder._id.toString() },
     });
+
+    // Update order with session ID
+    await Order.findByIdAndUpdate(newOrder._id, {
+      stripeSessionId: session.id,
+    });
+
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (error: any) {
     let errorMsg = "order payment error";
