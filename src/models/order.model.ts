@@ -113,5 +113,11 @@ const orderSchema = new mongoose.Schema<Iorder>(
   { timestamps: true }
 );
 
-const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+console.log("🟢 Order Model Loaded");
+let Order: mongoose.Model<Iorder>;
+if (mongoose.models.Order) {
+  Order = mongoose.models.Order;
+} else {
+  Order = mongoose.model("Order", orderSchema);
+}
 export default Order;

@@ -1,6 +1,31 @@
 import mongoose from "mongoose";
 
-interface IDeliveryAssigment {
+/* ================= ✅ ADDITIONS ================= */
+
+// Populated Order typing
+export interface IPopulatedOrder {
+  _id: mongoose.Types.ObjectId;
+  address: {
+    fullName: string;
+    mobile: string;
+    city: string;
+    state: string;
+    fullAddress: string;
+    pincode: string;
+    latitude: number;
+    longitude: number;
+  };
+  totalAmount?: number;
+}
+
+// Populated Assignment typing
+export type IDeliveryAssignmentPopulated = IDeliveryAssigment & {
+  order: IPopulatedOrder;
+};
+
+/* ================= ORIGINAL CODE ================= */
+
+export interface IDeliveryAssigment {
   _id?: mongoose.Types.ObjectId;
   order: mongoose.Types.ObjectId;
   brodcastedTo: mongoose.Types.ObjectId[];
@@ -37,10 +62,15 @@ const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssigment>(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const DeliveryAssignment =
-  mongoose.models.DeliveryAssignment ||
-  mongoose.model("DeliveryAssignment", deliveryAssignmentSchema);
+console.log("🔵 DeliveryAssignment Model Loaded");
+let DeliveryAssignment: mongoose.Model<IDeliveryAssigment>;
+if (mongoose.models.DeliveryAssignment) {
+  DeliveryAssignment = mongoose.models.DeliveryAssignment;
+} else {
+  DeliveryAssignment = mongoose.model("DeliveryAssignment", deliveryAssignmentSchema);
+}
+
 export default DeliveryAssignment;
