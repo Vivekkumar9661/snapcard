@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import AdminDashboard from "@/components/AdminDashboard";
 import DeliveryBoy from "@/components/DeliveryBoy";
 import EditRoleMobile from "@/components/EditRoleMobile";
-import GeoUpdater from "@/components/GeoUpdater";
 import Nav from "@/components/Nav";
 import UserDashboard from "@/components/UserDashboard";
 import connectDb from "@/lib/db";
@@ -25,7 +24,6 @@ async function Home() {
   return (
     <div>
       <Nav user={plainUser} />
-      <GeoUpdater userId={plainUser._id} />
       {user.role == "user" ? (
         <UserDashboard />
       ) : user.role == "admin" ? (

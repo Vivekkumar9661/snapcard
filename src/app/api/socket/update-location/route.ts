@@ -62,8 +62,6 @@ export async function POST(req: NextRequest) {
     await connectDb();
 
     const body = await req.json();
-    console.log("📍 UPDATE LOCATION BODY:", body);
-
     const { userId, latitude, longitude } = body;
 
     // ✅ validation

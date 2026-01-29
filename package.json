@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "ts-node --project tsconfig.server.json server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node dist/server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -26,14 +26,17 @@
     "react-dom": "19.2.0",
     "react-leaflet": "^5.0.0",
     "react-redux": "^9.2.0",
+    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
-    "stripe": "^20.1.0"
+    "stripe": "^20.1.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.28",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/socket.io": "^3.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",

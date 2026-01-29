@@ -16,15 +16,13 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    const URL = process.env.NEXT_PUBLIC_SOCKET_SERVER;
-
-    if (!URL) {
-      throw new Error("NEXT_PUBLIC_SOCKET_SERVER missing");
-    }
+    // If running with custom server, we can usually connect to the same origin
+    const URL = process.env.NEXT_PUBLIC_SOCKET_SERVER || undefined;
 
     socket = io(URL, {
       transports: ["websocket"],
       autoConnect: true,
+      path: "/socket.io", // Ensure we use the default path
     });
   }
 

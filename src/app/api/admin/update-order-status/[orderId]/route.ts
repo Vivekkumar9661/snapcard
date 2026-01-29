@@ -159,6 +159,8 @@ export async function POST(
         );
       }
 
+      console.log("[api:update-order-status] Order Location:", { latitude, longitude });
+
       const nearbyDeliveryBoys = await User.find({
         role: "deliveryBoy",
         location: {
@@ -172,6 +174,8 @@ export async function POST(
         },
       });
 
+      console.log(`[api:update-order-status] Found ${nearbyDeliveryBoys.length} delivery boys within 10km`);
+
       const nearbyIds = nearbyDeliveryBoys.map((b) => b._id);
 
       const busyIds = await DeliveryAssignment.find({
@@ -179,13 +183,21 @@ export async function POST(
         status: { $nin: ["brodcasted", "completed"] },
       }).distinct("assignedTo");
 
+      console.log(`[api:update-order-status] Busy delivery boys count: ${busyIds.length}`);
+
       const busySet = new Set(busyIds.map(String));
 
       const available = nearbyDeliveryBoys.filter(
         (b) => !busySet.has(String(b._id))
       );
 
+      console.log(`[api:update-order-status] Available delivery boys: ${available.length}`);
+
       if (available.length === 0) {
+        // Fallback check: how many total delivery boys exist?
+        const totalBoys = await User.countDocuments({ role: "deliveryBoy" });
+        console.log(`[api:update-order-status] Total delivery boys in DB: ${totalBoys}`);
+
         await order.save();
         return NextResponse.json(
           { message: "no delivery boy available" },

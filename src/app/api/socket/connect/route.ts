@@ -60,8 +60,6 @@ export async function POST(req: NextRequest) {
     await connectDb();
 
     const body = await req.json();
-    console.log("SOCKET CONNECT BODY:", body);
-
     const { userId, socketId } = body;
 
     // validation
