@@ -83,6 +83,12 @@ const DeliveryBoyDashboard = () => {
             <p className="text-sm text-gray-500">Status: {a.status}</p>
 
             <p className="text-gray-600">{a.order.address.fullAddress}</p>
+
+            <p className="text-green-600"><span className="font-semibold">Total: ₹{a.order.totalAmount}</span></p>
+            <div className="flex gap-2 mt-4">
+              <button className="bg-green-500 text-white px-6 py-2 rounded cursor-pointer">Accept</button>
+              <button className="bg-red-500 text-white px-6 py-2 rounded cursor-pointer">Reject</button>
+            </div>
           </div>
         ))}
       </div>

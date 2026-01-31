@@ -6,7 +6,9 @@ import axios from "axios";
 
 dotenv.config();
 
+
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 4000;
@@ -85,6 +87,17 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+app.post("/notify", (req, res) => {
+  const { socketId, event, data } = req.body;
+  if (socketId) {
+    io.to(socketId).emit(event, data);
+
+  } else {
+    io.emit(event, data);
+  }
+  res.status(200).json({ message: "Notification sent successfully" });
+})
 
 server.listen(PORT, () => {
   console.log(`Socket server running on port ${PORT}`);

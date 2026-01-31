@@ -1,4 +1,5 @@
 import connectDb from "@/lib/db";
+import emitEventHandler from "@/lib/emitEventHandler";
 import Order from "@/models/order.model";
 import User from "@/models/user.model";
 import { NextRequest, NextResponse } from "next/server";
@@ -31,22 +32,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
+      return new NextResponse(
+        JSON.stringify({
           error: true,
           message: `Missing required fields: ${missingFields.join(", ")}`,
           fields: missingFields,
           received: body,
-        },
-        { status: 400 }
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const user = await User.findById(body.userId);
     if (!user) {
-      return NextResponse.json(
-        { error: true, message: "User not found", userId: body.userId },
-        { status: 400 }
+      return new NextResponse(
+        JSON.stringify({ error: true, message: "User not found", userId: body.userId }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -57,18 +58,23 @@ export async function POST(req: NextRequest) {
       totalAmount: body.totalAmount,
       address: body.address,
     });
-    return NextResponse.json(
-      { error: false, order: newOrder },
-      { status: 201 }
+    await emitEventHandler({ event: "new-order", data: newOrder });
+    return new NextResponse(
+      JSON.stringify({ error: false, order: newOrder }),
+      { status: 201, headers: { "Content-Type": "application/json" } }
     );
+
+
+
+
   } catch (error: any) {
-    return NextResponse.json(
-      {
+    return new NextResponse(
+      JSON.stringify({
         error: true,
         message: error?.message || `Place order error`,
         stack: error?.stack || null,
-      },
-      { status: 500 }
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
