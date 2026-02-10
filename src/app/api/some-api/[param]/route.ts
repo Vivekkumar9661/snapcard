@@ -46,7 +46,6 @@ const DeliveryBoyDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // 🔌 Socket Listener for New Assignments
     const socket = getSocket();
 
     socket.on("connect", () => {
@@ -59,7 +58,7 @@ const DeliveryBoyDashboard = () => {
 
       const newAssignment: any = {
         _id: data.assignmentId,
-        status: "broadcasted", // Default status for new assignment
+        status: "broadcasted",
         broadcastedTo: [],
         assignedTo: null,
         acceptedAt: undefined,
@@ -67,10 +66,10 @@ const DeliveryBoyDashboard = () => {
         updatedAt: new Date(),
         order: {
           _id: data.orderId,
-          address: data.address, // Expecting full address object from socket
+          address: data.address,
           totalAmount: data.totalAmount,
           status: data.orderStatus || "pending",
-          item: [], // Items might not be in socket data, empty array to satisfy type
+          item: [],
         },
       };
 
@@ -81,7 +80,6 @@ const DeliveryBoyDashboard = () => {
       console.log("🔔 Order Status Updated:", data);
       setAssignments((prev) =>
         prev.map((a) => {
-          // use String(...) on both sides to handle ObjectId vs string and avoid errors when null
           if (String(a.order?._id ?? "") === String(data.orderId ?? "")) {
             return {
               ...a,
@@ -109,9 +107,7 @@ const DeliveryBoyDashboard = () => {
     try {
       const response = await fetch(
         `/api/delivery/assignment/${assignmentId}/accept-assignment`,
-        {
-          method: "POST",
-        },
+        { method: "POST" },
       );
       const data = await response.json();
       if (response.ok) {
@@ -138,9 +134,7 @@ const DeliveryBoyDashboard = () => {
     try {
       const response = await fetch(
         `/api/delivery/assignment/${assignmentId}/reject-assignment`,
-        {
-          method: "POST",
-        },
+        { method: "POST" },
       );
       if (response.ok) {
         alert("Assignment rejected.");
@@ -185,7 +179,6 @@ const DeliveryBoyDashboard = () => {
         )}
 
         {assignments.map((a, idx) => {
-          // safe order reference to avoid runtime null errors
           const order: any = a.order || {};
           const assignmentId = a._id ? a._id.toString() : null;
           const orderIdDisplay = order._id
@@ -212,8 +205,8 @@ const DeliveryBoyDashboard = () => {
                     orderStatus === "out of delivery"
                       ? "bg-orange-100 text-orange-700"
                       : orderStatus === "delivered"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-blue-100 text-blue-700"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-100 text-blue-700"
                   }`}
                 >
                   {orderStatus}
@@ -250,12 +243,3 @@ const DeliveryBoyDashboard = () => {
 };
 
 export default DeliveryBoyDashboard;
-
-export async function POST(request: Request, context: any) {
-  let params = context?.params;
-  if (params && typeof params.then === "function") {
-    try { params = await params; } catch { params = {}; }
-  }
-  // ...use params safely...
-  // ...existing code...
-}
