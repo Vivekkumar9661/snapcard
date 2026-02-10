@@ -2,16 +2,12 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
-// fix default icon paths for Leaflet (Next.js/webpack asset handling)
-import iconUrl from "leaflet/dist/images/marker-icon.png";
-import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
-import shadowUrl from "leaflet/dist/images/marker-shadow.png";
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// remove local PNG imports (can cause build errors) and use CDN URLs instead
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 import { motion } from "motion/react";

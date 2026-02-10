@@ -81,8 +81,8 @@ const DeliveryBoyDashboard = () => {
       console.log("🔔 Order Status Updated:", data);
       setAssignments((prev) =>
         prev.map((a) => {
-          // guard a.order and a.order._id before calling toString()
-          if (a.order?._id?.toString() === data.orderId) {
+          // use String(...) on both sides to handle ObjectId vs string and avoid errors when null
+          if (String(a.order?._id ?? "") === String(data.orderId ?? "")) {
             return {
               ...a,
               order: {
