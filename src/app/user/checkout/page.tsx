@@ -2,16 +2,6 @@
 export const dynamic = "force-dynamic";
 
 import React, { useEffect, useState } from "react";
-import "leaflet/dist/leaflet.css";
-import L, { LatLngExpression } from "leaflet";
-// remove local PNG imports (can cause build errors) and use CDN URLs instead
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -24,22 +14,23 @@ import {
   MapPin,
   Navigation,
   Phone,
-  PinIcon,
   Truck,
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import axios from "axios";
-import { OpenStreetMapProvider } from "leaflet-geosearch";
+import dynamicImport from "next/dynamic";
 
-const MarkerIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/128/684/684908.png",
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
+// Dynamically import map component to avoid SSR issues
+const MapComponent = dynamicImport(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[330px] bg-gray-100 rounded-xl flex items-center justify-center">
+      Loading map...
+    </div>
+  ),
 });
 
 const Checkout = () => {
@@ -100,35 +91,6 @@ const Checkout = () => {
     }
   }, [userData]);
 
-  const DraggableMarker: React.FC = () => {
-    const map = useMap();
-    // guard against no position
-    if (!position) return null;
-
-    useEffect(() => {
-      try {
-        map.setView(position as LatLngExpression, 15, { animate: true });
-      } catch (e) {
-        console.warn("Map setView failed", e);
-      }
-    }, [position, map]);
-
-    return (
-      <Marker
-        icon={MarkerIcon}
-        position={position as LatLngExpression}
-        draggable={true}
-        eventHandlers={{
-          dragend: (e: L.LeafletEvent) => {
-            const marker = e.target as L.Marker;
-            const { lat, lng } = marker.getLatLng();
-            setPosition([lat, lng]);
-          },
-        }}
-      />
-    );
-  };
-
   const handleSearchQuery = async () => {
     if (!searchQuery.trim()) {
       setSearchLoading(false);
@@ -137,13 +99,14 @@ const Checkout = () => {
     setSearchLoading(true);
 
     try {
+      // Import OpenStreetMapProvider only when needed (client-side)
+      const { OpenStreetMapProvider } = await import("leaflet-geosearch");
       const provider = new OpenStreetMapProvider();
       const results = await provider.search({ query: searchQuery });
 
       if (results && results.length > 0) {
         setPosition([results[0].y, results[0].x]);
       } else {
-        // no results found
         alert("No location found for that query");
       }
     } catch (error) {
@@ -448,19 +411,7 @@ const Checkout = () => {
             </div>
             <div className="relative mt-6 h-[330px] rounded-xl overflow-hidden border border-gray-200 shadow-inner">
               {position && (
-                <MapContainer
-                  key={`${position[0]}_${position[1]}`}
-                  center={position as LatLngExpression}
-                  zoom={13}
-                  scrollWheelZoom={true}
-                  className="w-full h-full"
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <DraggableMarker />
-                </MapContainer>
+                <MapComponent position={position} setPosition={setPosition} />
               )}
               <motion.button
                 whileTap={{ scale: 0.93 }}
