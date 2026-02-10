@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, CheckCircle, Package } from "lucide-react";
 import Link from "next/link";
@@ -8,9 +8,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 
+export const dynamic = "force-dynamic"; // disables prerendering for this page
 
-
-export default function OrderSuccess() {
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [verificationStatus, setVerificationStatus] = useState<
@@ -36,7 +36,7 @@ export default function OrderSuccess() {
           console.error("Verification error:", error);
           setVerificationStatus("error");
           setErrorMessage(
-            error.response?.data?.message || "Payment verification failed."
+            error.response?.data?.message || "Payment verification failed.",
           );
         }
       };
@@ -131,10 +131,7 @@ export default function OrderSuccess() {
           >
             Thank you for shoping with us! Your order has been placed and is
             beign processed. You can track its progress in your
-            <span className="font-semibold text-green-700">
-              {" "}
-              My Order
-            </span>{" "}
+            <span className="font-semibold text-green-700"> My Order</span>{" "}
             section
           </motion.p>
           <motion.div
@@ -182,5 +179,13 @@ export default function OrderSuccess() {
         </>
       )}
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }
