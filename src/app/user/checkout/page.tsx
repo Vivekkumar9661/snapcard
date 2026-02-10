@@ -1,4 +1,6 @@
 "use client";
+export const dynamic = "force-dynamic";
+
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
@@ -77,7 +79,8 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "online">("COD");
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    // Only run geolocation in browser
+    if (typeof window !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
@@ -263,7 +266,7 @@ const Checkout = () => {
   };
 
   const handleCurrentLocation = () => {
-    if (navigator.geolocation) {
+    if (typeof window !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
