@@ -1,5 +1,5 @@
 "use client";
-import { Iorder } from "@/models/order.model";
+
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import {
@@ -11,14 +11,28 @@ import {
   ChevronUp,
   ChevronDown,
   Truck,
+  UserCheck,
 } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
-import { set } from "mongoose";
+import mongoose from "mongoose";
+import { IUser } from "@/models/user.model";
+import { Iorder } from "@/models/order.model";
 
 const AdminOrderCard = ({ order }: { order: Iorder }) => {
+  const isPopulatedUser = (user: any): user is IUser => {
+    return user && typeof user === 'object' && 'name' in user;
+  };
+
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<string>(order.status);
+
+  // Sync state with props for real-time updates
+  React.useEffect(() => {
+    setStatus(order.status);
+  }, [order.status]);
+
+  const deliveryBoy = isPopulatedUser(order.assignedDeliveryBoy) ? order.assignedDeliveryBoy : null;
   const updateStatus = async (orderId: string, status: string) => {
     console.log("SENDING ORDER ID:", orderId);
     console.log("SENDING STATUS:", status);
@@ -59,11 +73,10 @@ const AdminOrderCard = ({ order }: { order: Iorder }) => {
 
           <span
             className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border
-            ${
-              order.isPaid
+            ${order.isPaid
                 ? "bg-green-100 text-green-700 border-green-300"
                 : "bg-red-100 text-red-700 border-red-300"
-            }`}
+              }`}
           >
             {order.isPaid ? "paid" : "unpaid"}
           </span>
@@ -96,14 +109,37 @@ const AdminOrderCard = ({ order }: { order: Iorder }) => {
             </span>
           </p>
         </div>
+        {deliveryBoy ? (
+          <div className="mt-3 p-3 bg-green-50 rounded-xl border border-green-100 space-y-1 text-gray-700 text-sm">
+            <p className="flex items-center gap-2 font-bold text-green-800 mb-1">
+              <UserCheck size={16} />
+              <span>Delivery Partner</span>
+            </p>
+            <p className="flex items-center gap-2 font-semibold">
+              <User size={14} className="text-green-700" />
+              <span>{deliveryBoy.name}</span>
+            </p>
+            <p className="flex items-center gap-2 font-semibold">
+              <Phone size={14} className="text-green-700" />
+              <span>{deliveryBoy.mobile}</span>
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-500 text-sm">
+            <p className="flex items-center gap-2 font-medium italic">
+              <Truck size={16} />
+              <span>Searching for delivery partner...</span>
+            </p>
+          </div>
+        )}
+
 
         <div className="flex flex-col items-start md:items-end gap-2">
           <span
             className={`text-xs font-semibold px-3 py-1 rounded-full capitalize
-              ${
-                status === "deliverd"
-                  ? "bg-green-100 text-green-700"
-                  : status === "pending"
+              ${status === "delivered"
+                ? "bg-green-100 text-green-700"
+                : status === "pending"
                   ? "bg-yellow-100 text-yellow-700"
                   : "bg-blue-100 text-blue-700"
               }`}

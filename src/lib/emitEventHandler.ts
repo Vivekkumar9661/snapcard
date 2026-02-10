@@ -7,7 +7,8 @@ async function emitEventHandler({ socketId, event, data }: {
     data: any;
 }) {
     try {
-        await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/notify`, {
+        const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+        await axios.post(`${SOCKET_URL}/notify`, {
             socketId,
             event,
             data

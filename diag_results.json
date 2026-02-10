@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-02-03T05:34:23.592Z",
+  "collections": [
+    "groceries",
+    "orders",
+    "users",
+    "deliveryassignments"
+  ],
+  "user": {
+    "_id": "69653e4c32755ef9bd5e6f5d",
+    "name": "sumit pandit",
+    "email": "sumit30@gmail.com",
+    "password": "$2b$10$w1L47pCU/rh6FP7igV4hn.1dJYYyhaH5WHvhz9H8/aovw9LA56/MK",
+    "role": "deliveryBoy",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        85.1491,
+        25.5846
+      ]
+    },
+    "socketId": "Y3Tjm06NcJiaxsR0AAAl",
+    "isOnline": true,
+    "createdAt": "2026-01-12T18:32:44.777Z",
+    "updatedAt": "2026-02-03T05:20:48.430Z",
+    "__v": 0,
+    "mobile": "9087654321"
+  },
+  "assignments": [
+    {
+      "id": "6965fb18c5c1cfb2ab0e7e02",
+      "status": "brodcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    },
+    {
+      "id": "6965fb20c5c1cfb2ab0e7e09",
+      "status": "brodcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    },
+    {
+      "id": "696a81a6f0f8d20937acb797",
+      "status": "brodcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    },
+    {
+      "id": "696e809097d82bee92c8451c",
+      "status": "brodcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    },
+    {
+      "id": "697d81c5f7d458c2fbc50d1c",
+      "status": "brodcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    },
+    {
+      "id": "6981887657b7cfee2e58d436",
+      "status": "broadcasted",
+      "broadcastedTo": [
+        "69653e4c32755ef9bd5e6f5d"
+      ],
+      "assignedTo": null,
+      "matchesUser": true
+    }
+  ],
+  "error": null
+}

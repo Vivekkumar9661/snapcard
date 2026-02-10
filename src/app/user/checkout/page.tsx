@@ -1,5 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import "leaflet/dist/leaflet.css";
+import L, { LatLngExpression } from "leaflet";
+// fix default icon paths for Leaflet (Next.js/webpack asset handling)
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+});
+
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -19,8 +33,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-
-import L, { LatLngExpression } from "leaflet";
 
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import axios from "axios";
@@ -53,7 +65,7 @@ const Checkout = () => {
     }
   }, [userData, dispatch]);
   const { subTotal, deliveryFee, finalTotal, cartData } = useSelector(
-    (state: RootState) => state.cart
+    (state: RootState) => state.cart,
   );
   const [address, setAddress] = useState({
     fullName: "",
@@ -78,7 +90,7 @@ const Checkout = () => {
         (err) => {
           console.log("location error", err);
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 },
       );
     }
   }, []);
@@ -91,9 +103,17 @@ const Checkout = () => {
 
   const DraggableMarker: React.FC = () => {
     const map = useMap();
+    // guard against no position
+    if (!position) return null;
+
     useEffect(() => {
-      map.setView(position as LatLngExpression, 15, { animate: true });
+      try {
+        map.setView(position as LatLngExpression, 15, { animate: true });
+      } catch (e) {
+        console.warn("Map setView failed", e);
+      }
     }, [position, map]);
+
     return (
       <Marker
         icon={MarkerIcon}
@@ -111,19 +131,27 @@ const Checkout = () => {
   };
 
   const handleSearchQuery = async () => {
+    if (!searchQuery.trim()) {
+      setSearchLoading(false);
+      return;
+    }
     setSearchLoading(true);
-    if (!searchQuery.trim()) return;
 
     try {
       const provider = new OpenStreetMapProvider();
       const results = await provider.search({ query: searchQuery });
 
       if (results && results.length > 0) {
-        setSearchLoading(false);
         setPosition([results[0].y, results[0].x]);
+      } else {
+        // no results found
+        alert("No location found for that query");
       }
     } catch (error) {
       console.log("Search location error:", error);
+      alert("Location search failed");
+    } finally {
+      setSearchLoading(false);
     }
   };
 
@@ -132,15 +160,15 @@ const Checkout = () => {
       if (!position) return;
       try {
         const result = await axios.get(
-          `https://nominatim.openstreetmap.org/reverse?lat=${position[0]}&lon=${position[1]}&format=json`
+          `https://nominatim.openstreetmap.org/reverse?lat=${position[0]}&lon=${position[1]}&format=json`,
         );
-        console.log(result.data);
+        const addr = result.data?.address || {};
         setAddress((prev) => ({
           ...prev,
-          city: result.data.address.city,
-          state: result.data.address.state,
-          pincode: result.data.address.postcode,
-          fullAddress: result.data.display_name,
+          city: addr.city || addr.town || addr.village || "",
+          state: addr.state || "",
+          pincode: addr.postcode || "",
+          fullAddress: result.data?.display_name || "",
         }));
       } catch (error) {
         console.log(error);
@@ -248,7 +276,7 @@ const Checkout = () => {
         (err) => {
           console.log("location error", err);
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 },
       );
     }
   };
@@ -422,6 +450,7 @@ const Checkout = () => {
             <div className="relative mt-6 h-[330px] rounded-xl overflow-hidden border border-gray-200 shadow-inner">
               {position && (
                 <MapContainer
+                  key={`${position[0]}_${position[1]}`}
                   center={position as LatLngExpression}
                   zoom={13}
                   scrollWheelZoom={true}

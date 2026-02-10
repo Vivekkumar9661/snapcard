@@ -1,85 +1,6 @@
-// import connectDb from "@/lib/db";
-// import DeliveryAssignment from "@/models/deliveryAssignment.model";
-// import Order from "@/models/order.model";
-// import User from "@/models/user.model";
 
-// import { NextRequest, NextResponse } from "next/server";
-
-// export async function POST(
-//   req: NextRequest,
-//   { params }: { params: { orderId: string } }
-// ) {
-//   try {
-//     await connectDb();
-//     const { orderId } = params;
-//     const { status } = await req.json();
-//     const order = await Order.findById(orderId).populate("user");
-//     if (!order) {
-//       return NextResponse.json({ message: "order not found" }, { status: 400 });
-//     }
-//     order.status = status;
-//     let deliveryBoyPayload: any[] = [];
-//     if (status === "out of delivery" && !order.assignment) {
-//       const { latitude, longitude } = order.address;
-//       const nearByDeliveryBoy = await User.find({
-//         role: "deliveryBoy",
-//         location: {
-//           $near: {
-//             $geometry: {
-//               type: "Point",
-//               coordinates: [Number(longitude), Number(latitude)],
-//             },
-//             $maxDistance: 10000,
-//           },
-//         },
-//       });
-//       const nearByIds = nearByDeliveryBoy.map((b) => b._id);
-//       const busyIds = await DeliveryAssignment.find({
-//         assignedTo: { $in: nearByIds },
-//         status: { $nin: ["brodcasted", "completed"] },
-//       }).distinct("assignedTo");
-//       const busyIdSet = new Set(busyIds.map((b) => String(b)));
-//       const availableDeliveryBoy = nearByDeliveryBoy.filter(
-//         (b) => !busyIdSet.has(String(b._id))
-//       );
-//       const candidates = availableDeliveryBoy.map((b) => b._id);
-//       if (candidates.length == 0) {
-//         await order.save();
-//         return NextResponse.json(
-//           { message: "there is not available delivery boy" },
-//           { status: 200 }
-//         );
-//       }
-//       const deliveryAssignment = await DeliveryAssignment.create({
-//         order: order._id,
-//         brodcastedTo: candidates,
-//         status: "brodcasted",
-//       });
-//       (order.assignment = deliveryAssignment._id),
-//         (deliveryBoyPayload = availableDeliveryBoy.map((b) => ({
-//           id: b._id,
-//           name: b.name,
-//           mobile: b.mobile,
-//           latitude: b.location.coordinates[1],
-//           longitude: b.location.coordinates[0],
-//         })));
-//       await deliveryAssignment.populate("order");
-//     }
-//     await order.save();
-//     await order.populate("user");
-
-//     return NextResponse.json({
-//       assignment: order.assignment?._id,
-//       availableBoys: deliveryBoyPayload,
-//     });
-//   } catch (error) {
-//     return NextResponse.json(
-//       { message: `update status error ${error}` },
-//       { status: 500 }
-//     );
-//   }
-// }
 import connectDb from "@/lib/db";
+import emitEventHandler from "@/lib/emitEventHandler";
 import DeliveryAssignment from "@/models/deliveryAssignment.model";
 import Order from "@/models/order.model";
 import User from "@/models/user.model";
@@ -180,7 +101,7 @@ export async function POST(
 
       const busyIds = await DeliveryAssignment.find({
         assignedTo: { $in: nearbyIds },
-        status: { $nin: ["brodcasted", "completed"] },
+        status: { $nin: ["broadcasted", "completed"] },
       }).distinct("assignedTo");
 
       console.log(`[api:update-order-status] Busy delivery boys count: ${busyIds.length}`);
@@ -207,9 +128,26 @@ export async function POST(
 
       const assignment = await DeliveryAssignment.create({
         order: order._id,
-        brodcastedTo: available.map((b) => b._id),
-        status: "brodcasted",
+        broadcastedTo: available.map((b) => b._id),
+        status: "broadcasted",
       });
+      for (const boyId of available) {
+        const boy = await User.findById(boyId);
+        if (boy.socketId) {
+          console.log(`[api:update-order-status] Notifying Delivery Boy: ${boy.name} (${boy.socketId})`);
+          await emitEventHandler({
+            socketId: boy.socketId,
+            event: "new-delivery-assignment",
+            data: {
+              assignmentId: assignment._id,
+              orderId: order._id,
+              address: order.address,
+              totalAmount: order.totalAmount,
+              status: normalizedStatus,
+            },
+          });
+        }
+      }
 
       order.assignment = assignment._id;
 
@@ -220,7 +158,69 @@ export async function POST(
         latitude: b.location.coordinates[1],
         longitude: b.location.coordinates[0],
       }));
+
+      /* 🔔 Notify Available Delivery Boys */
+      for (const boy of available) {
+        if (boy.socketId) {
+          console.log(`[api:update-order-status] Notifying Delivery Boy: ${boy.name} (${boy.socketId})`);
+          await emitEventHandler({
+            socketId: boy.socketId,
+            event: "new-delivery-assignment",
+            data: {
+              assignmentId: assignment._id,
+              orderId: order._id,
+              address: order.address,
+              totalAmount: order.totalAmount,
+              status: normalizedStatus, // 👈 ADDED STATUS
+            },
+          });
+        }
+      }
     }
+
+    /* 🔔 Notify Customer (User) */
+    const currentDate = new Date();
+    const customer = await User.findById(order.user);
+
+    console.log(`[DEBUG] Customer Found: ${customer?._id}, SocketID: ${customer?.socketId}`); // 👈 ADDED LOG
+
+    if (customer && customer.socketId) {
+      console.log(`[api:update-order-status] Notifying Customer: ${customer.name} (${customer.socketId})`);
+      await emitEventHandler({
+        socketId: customer.socketId,
+        event: "order-updated",
+        data: {
+          orderId: order._id,
+          status: normalizedStatus,
+          updatedAt: currentDate
+        }
+      });
+    } else {
+      console.log(`[DEBUG] SKIPPING Customer Notification: Missing SocketID or User`); // 👈 ADDED LOG
+    }
+
+    /* 🔔 Notify Assigned Delivery Boy (if exists) */
+    if (order.assignment) {
+      const existingAssignment = await DeliveryAssignment.findById(order.assignment).populate("assignedTo");
+      if (existingAssignment && existingAssignment.assignedTo) {
+        // assignedTo could be an object if populated, or ID if not. Checked populate above.
+        const deliveryBoy = existingAssignment.assignedTo as any;
+
+        if (deliveryBoy.socketId) {
+          console.log(`[api:update-order-status] Notifying Assigned Delivery Boy: ${deliveryBoy.name} (${deliveryBoy.socketId})`);
+          await emitEventHandler({
+            socketId: deliveryBoy.socketId,
+            event: "order-updated",
+            data: {
+              orderId: order._id,
+              status: normalizedStatus,
+              updatedAt: currentDate
+            }
+          });
+        }
+      }
+    }
+
 
     await order.save();
 

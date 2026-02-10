@@ -22,7 +22,7 @@ const debug = async () => {
         // 2. Try to find ONE assignment and populate it
         console.log("Fetching one assignment...");
         const assignment = await DeliveryAssignment.findOne({
-            status: "brodcasted"
+            status: "broadcasted"
         })
             .populate({
                 path: "order",
@@ -31,7 +31,7 @@ const debug = async () => {
             .populate("assignedTo");
 
         if (!assignment) {
-            console.log("No 'brodcasted' assignment found. Trying any assignment...");
+            console.log("No 'broadcasted' assignment found. Trying any assignment...");
             const anyAssignment = await DeliveryAssignment.findOne({}).populate("order");
             console.log("Any assignment found?", !!anyAssignment);
             if (anyAssignment) console.log("Assignment:", JSON.stringify(anyAssignment, null, 2));

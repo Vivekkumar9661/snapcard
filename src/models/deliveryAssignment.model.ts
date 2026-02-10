@@ -16,33 +16,35 @@ export interface IPopulatedOrder {
     longitude: number;
   };
   totalAmount?: number;
+  status: string;
+  item: any[];
 }
 
 // Populated Assignment typing
-export type IDeliveryAssignmentPopulated = IDeliveryAssigment & {
+export type IDeliveryAssignmentPopulated = Omit<IDeliveryAssignment, "order"> & {
   order: IPopulatedOrder;
 };
 
 /* ================= ORIGINAL CODE ================= */
 
-export interface IDeliveryAssigment {
+export interface IDeliveryAssignment {
   _id?: mongoose.Types.ObjectId;
   order: mongoose.Types.ObjectId;
-  brodcastedTo: mongoose.Types.ObjectId[];
+  broadcastedTo: mongoose.Types.ObjectId[];
   assignedTo: mongoose.Types.ObjectId | null;
-  status: "brodcasted" | "assigned" | "completed";
+  status: "broadcasted" | "assigned" | "completed";
   acceptedAt: Date;
-  createdAT?: Date;
-  UpdateAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssigment>(
+const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssignment>(
   {
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
     },
-    brodcastedTo: [
+    broadcastedTo: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -55,8 +57,8 @@ const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssigment>(
 
     status: {
       type: String,
-      enum: ["brodcasted", "assigned", "completed"],
-      default: "brodcasted",
+      enum: ["broadcasted", "assigned", "completed"],
+      default: "broadcasted",
     },
     acceptedAt: {
       type: Date,
@@ -66,7 +68,7 @@ const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssigment>(
 );
 
 console.log("🔵 DeliveryAssignment Model Loaded");
-let DeliveryAssignment: mongoose.Model<IDeliveryAssigment>;
+let DeliveryAssignment: mongoose.Model<IDeliveryAssignment>;
 if (mongoose.models.DeliveryAssignment) {
   DeliveryAssignment = mongoose.models.DeliveryAssignment;
 } else {

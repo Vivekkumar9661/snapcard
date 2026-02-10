@@ -15,6 +15,7 @@ const InitUser = () => {
     const userId = session.user.id;
 
     // 1. Identity
+    console.log("👉 InitUser: Emitting identity", userId); // 👈 ADDED LOG
     socket.emit("identity", userId);
 
     const syncUserWithDb = async () => {

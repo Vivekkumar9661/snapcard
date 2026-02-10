@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import UserOrderCard from "@/components/UserOrderCard";
+import { getSocket } from "@/lib/socket";
 
 const MyOrderPage = () => {
   const router = useRouter();
@@ -25,6 +26,42 @@ const MyOrderPage = () => {
     };
     getMyOrder();
   }, []);
+
+  useEffect(() => {
+    // 🔌 Socket Connection
+    const socket = getSocket();
+
+    const onConnect = () => {
+      console.log("Connected to socket:", socket.id);
+    };
+
+    const onOrderUpdated = (updatedOrderData: any) => {
+      console.log("🔔 Order Updated Event:", updatedOrderData);
+
+      setOrder((prevOrders) => {
+        if (!prevOrders) return prevOrders;
+        return prevOrders.map((o) => {
+          if (o._id === updatedOrderData.orderId) {
+            return { ...o, status: updatedOrderData.status };
+          }
+          return o;
+        });
+      });
+    };
+
+    if (socket.connected) {
+      onConnect();
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("order-updated", onOrderUpdated);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("order-updated", onOrderUpdated);
+    };
+  }, []);
+
   if (loading) {
     <div className="flex items-center justify-center min-h-[50vh] text-gray-800">
       Loading...

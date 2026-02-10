@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import { IUser } from "./user.model";
 
 export interface Iorder {
   _id?: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId | IUser;
   item: [
     {
       grocery: mongoose.Types.ObjectId;
@@ -27,8 +28,8 @@ export interface Iorder {
     longitude: number;
   };
   assignment?: mongoose.Types.ObjectId;
-  assignedDeliveryBoy?: mongoose.Types.ObjectId;
-  status: "pending" | "out of delivery" | "deliverd";
+  assignedDeliveryBoy?: mongoose.Types.ObjectId | IUser;
+  status: "pending" | "out of delivery" | "delivered";
   createdAt?: Date;
   updateAt?: Date;
   stripePaymentIntentId?: string;
@@ -90,7 +91,7 @@ const orderSchema = new mongoose.Schema<Iorder>(
     },
     status: {
       type: String,
-      enum: ["pending", "out of delivery", "deliverd"],
+      enum: ["pending", "out of delivery", "delivered"],
       default: "pending",
     },
     stripePaymentIntentId: {
